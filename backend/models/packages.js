@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const schema = mongoose.Schema
 
 const packageSchema = new schema({
-    name: {
+    title: {
         type:String,
         required:true,
     },
@@ -11,7 +11,7 @@ const packageSchema = new schema({
         type:Number,
         required:true,
     },
-    durationDays: {
+    period: {
         type:Number,
         required:true,
     },
@@ -19,20 +19,29 @@ const packageSchema = new schema({
         type:Number,
         required:true,
     },
+    benefits: {
+        type:Array,
+        required:true,
+    }
 },{timestamps:true})
 
+packageSchema.statics.getAllPackages = async function() {
+    const packages = await this.find()
+    
+    return packages
+}
 
-
-packageSchema.statics.createPackage = async function(name,price,durationDays,pauseDaysAllowed) {
-    const exists = await this.findOne({name})
+packageSchema.statics.createPackage = async function(title,price,period,pauseDaysAllowed,benefits) {
+    const exists = await this.findOne({title})
     if(exists){
         throw Error('الإسم مستخدم بالفعل!')
     }
     const package = await this.create({
-        name,
+        title,
         price,
-        durationDays,
-        pauseDaysAllowed
+        period,
+        pauseDaysAllowed,
+        benefits
     })
     return package
 }

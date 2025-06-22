@@ -22,6 +22,28 @@ app.use(cors({
 // app.use('/owner-admin',ownerAdminRoutes)
 
 
+// user routes
+const userHomePageRoutes = require('./routes/userRoutes/homePageRoutes')
+const myAccountRoutes = require('./routes/userRoutes/myAccountRoutes')
+
+app.use('/user',userHomePageRoutes) 
+app.use('/my-account',myAccountRoutes) 
+
+require('./models/assets')
+require('./models/employee')
+const userModel = require('./models/user')
+app.post('/create-user',async (req,res)=>{
+    
+    try {
+        const { username,phone,email,password,gender,city,profilePicture,status } = req.body
+        const user = await userModel.createUser(username,phone,email,password,gender,city,profilePicture,status)
+
+        res.status(200).json( user );
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+})
+
 mongoose.connect(process.env.MONGODB_URL)
 .then(()=>{
     app.listen(process.env.PORT,()=>{

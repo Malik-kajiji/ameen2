@@ -7,7 +7,11 @@ const userAttendanceSchema = new schema({
         type:String,
         required:true,
     },
-},{timestamps:true})
+    data: {
+        type:Array,
+        default:[]
+    }
+})
 
 userAttendanceSchema.statics.createAttend = async function(userId) {
     const attend = await this.create({
@@ -17,7 +21,7 @@ userAttendanceSchema.statics.createAttend = async function(userId) {
 }
 
 userAttendanceSchema.statics.getUserAttendance = async function(userId) {
-    const attend = await this.find({
+    const attend = await this.findOne({
         userId,
     });
     return attend;

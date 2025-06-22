@@ -17,7 +17,6 @@ const stopRequestSchema = new schema({
     },
     reason: {
         type:String,
-        required:true,
     },
     status: {
         type:String,

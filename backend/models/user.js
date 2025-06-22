@@ -4,7 +4,12 @@ const bcrypt = require('bcrypt');
 const schema = mongoose.Schema
 
 const userSchema = new schema({
-    fullName: {
+    userNumber:{
+        type:Number,
+        required:true,
+        unique:true
+    },
+    username: {
         type:String,
         required:true,
     },
@@ -39,7 +44,7 @@ const userSchema = new schema({
         type:String,
         required:true,
     },
-    currentPackageId: {
+    currentSubscriptionId: {
         type:String,
     },
     remainingDays: {
@@ -52,15 +57,22 @@ const userSchema = new schema({
 
 
 
-userSchema.statics.createUser = async function(fullName,phone,email,password,gender,city,profilePicture,status) {
+userSchema.statics.createUser = async function(username,phone,email,password,gender,city,profilePicture,status) {
     const exists = await this.findOne({phone})
     if(exists){
         throw Error('رقم الهاتف مستخدم بالفعل الرجاء تسجيل الدخول!')
     }
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password,salt)
+    const latestUser = await this.findOne().sort({ userNumber: -1 });
+
+    let userNumber = 1;
+    if (latestUser) {
+        userNumber = latestUser.userNumber + 1;
+    }
     const user = await this.create({
-        fullName,
+        userNumber,
+        username,
         phone,
         email,
         password:hash,
@@ -83,11 +95,33 @@ userSchema.statics.deleteUser = async function(userId) {
     return exists
 }
 
+userSchema.statics.changeUserData = async function(_id,email,phone,password) {
+    const user = await this.findOne({_id})
+    const match = await bcrypt.compare(password,user.password)
 
-userSchema.statics.loginAsUser = async function(phone,password) {
-    const user = await this.findOne({phone})
+    if(!match){
+        throw Error('كلمة مرور غير صحيحة')
+    }
+
+    if(email !== '' && phone !== ''){
+        const user = await this.findOneAndUpdate({_id},{email,phone})
+        return {...user._doc,email,phone}
+    } else if(email === '' && phone !== ''){
+        const user = await this.findOneAndUpdate({_id},{phone})
+        return {...user._doc,phone}
+    } else if(email !== '' && phone === ''){
+        const user = await this.findOneAndUpdate({_id},{email})
+        return {...user._doc,email}
+    }else {
+        return user
+    }
+}
+
+
+userSchema.statics.loginAsUser = async function(email,password) {
+    const user = await this.findOne({email})
     if(!user){
-        throw Error('رقم الهاتف غير موجود')
+        throw Error('البريد الالكتروني غير موجود')
     }
     if(user.isBanned){
         throw Error('الحساب محظور')
